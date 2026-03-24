@@ -2,26 +2,31 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Aqil Chat Pro</title>
+<title>Aqil World Chat</title>
 
-<!-- Premium Font -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+<!-- Responsive -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- CSS Link -->
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+<!-- CSS -->
 <link rel="stylesheet" href="style.css">
 
 </head>
 <body>
 
-<div class="chat">
+<div class="chat-app">
 
-  <div class="header">💬 Aqil Chat Pro</div>
+  <div class="header">
+    💬 Aqil World Chat
+  </div>
 
   <div id="messages" class="messages"></div>
 
   <div id="replyBox"></div>
 
-  <div class="input-box">
+  <div class="input-area">
     <input id="msg" placeholder="Type message...">
     <button onclick="send()">➤</button>
   </div>
@@ -37,16 +42,13 @@ const firebaseConfig = {
   apiKey: "AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
   authDomain: "axassi-warsi.firebaseapp.com",
   databaseURL: "https://axassi-warsi-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "axassi-warsi",
-  storageBucket: "axassi-warsi.firebasestorage.app",
-  messagingSenderId: "342256023519",
-  appId: "1:342256023519:web:f1580d8767e0a98c4a766a"
+  projectId: "axassi-warsi"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Username system
+// Username
 let username = localStorage.getItem("name");
 if (!username) {
   username = prompt("Enter your name:");
@@ -78,37 +80,20 @@ db.ref("chat").on("child_added", snap => {
   let d = snap.val();
 
   let div = document.createElement("div");
-  div.className = "msg";
+  div.className = "msg " + (d.name === username ? "me" : "other");
 
-  if (d.name === username) div.classList.add("me");
-  else div.classList.add("other");
-
-  if (d.reply) {
-    let r = document.createElement("div");
-    r.className = "reply";
-    r.innerText = d.reply;
-    div.appendChild(r);
-  }
-
-  let n = document.createElement("div");
-  n.className = "name";
-  n.innerText = d.name;
-  div.appendChild(n);
-
-  let t = document.createElement("div");
-  t.innerText = d.text;
-  div.appendChild(t);
-
-  let time = document.createElement("div");
-  time.className = "time";
-  time.innerText = d.time;
-  div.appendChild(time);
+  div.innerHTML = `
+    ${d.reply ? `<div class="reply">${d.reply}</div>` : ""}
+    <div class="name">${d.name}</div>
+    <div class="text">${d.text}</div>
+    <div class="time">${d.time}</div>
+  `;
 
   div.onclick = () => {
     replyTo = d.text;
     let rb = document.getElementById("replyBox");
     rb.style.display = "block";
-    rb.innerText = "Replying to: " + d.text;
+    rb.innerText = "Replying: " + d.text;
   };
 
   document.getElementById("messages").appendChild(div);
@@ -120,3 +105,4 @@ db.ref("chat").on("child_added", snap => {
 
 </body>
 </html>
+  UPDATED BY AXASSI WARSI (A.W)
