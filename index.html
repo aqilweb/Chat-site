@@ -2,86 +2,129 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Pro Chat</title>
+<title>Aqil Chat Pro</title>
 
 <style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
 body {
-  margin:0;
   font-family: Arial;
-  background:#0f172a;
+  background:#0b141a;
+  height:100vh;
+  display:flex;
 }
 
 .chat {
-  max-width:400px;
-  margin:auto;
-  height:100vh;
+  width:100%;
   display:flex;
   flex-direction:column;
-  background:#1e293b;
 }
 
+/* Header */
 .header {
-  background:#22c55e;
-  padding:10px;
+  background:#202c33;
+  color:white;
+  padding:14px;
+  font-size:18px;
+  position:sticky;
+  top:0;
+  z-index:10;
   text-align:center;
-  font-weight:bold;
 }
 
+/* Messages */
 .messages {
   flex:1;
   overflow-y:auto;
   padding:10px;
 }
 
+/* Message bubble */
 .msg {
-  max-width:70%;
-  padding:8px;
+  max-width:75%;
+  padding:10px;
   margin:6px 0;
   border-radius:10px;
-  position:relative;
+  animation:fadeIn 0.2s ease;
 }
 
+@keyframes fadeIn {
+  from {opacity:0; transform:translateY(5px);}
+  to {opacity:1; transform:translateY(0);}
+}
+
+/* My message */
 .me {
-  background:#22c55e;
+  background:#005c4b;
+  color:white;
   margin-left:auto;
-  color:black;
 }
 
+/* Other message */
 .other {
-  background:#334155;
+  background:#202c33;
+  color:white;
 }
 
+/* Name */
 .name {
   font-size:11px;
-  color:yellow;
+  color:#00a884;
 }
 
+/* Reply */
+.reply {
+  font-size:11px;
+  color:#8696a0;
+  border-left:3px solid #00a884;
+  padding-left:6px;
+  margin-bottom:3px;
+}
+
+/* Time */
 .time {
   font-size:10px;
   text-align:right;
-  opacity:0.7;
+  opacity:0.6;
+  margin-top:3px;
 }
 
-.reply {
-  font-size:11px;
-  color:#94a3b8;
-}
-
+/* Input area */
 .input-box {
   display:flex;
+  padding:8px;
+  background:#202c33;
+  position:sticky;
+  bottom:0;
 }
 
 input {
   flex:1;
-  padding:10px;
+  padding:12px;
   border:none;
   outline:none;
+  border-radius:20px;
+  background:#2a3942;
+  color:white;
 }
 
 button {
-  background:#22c55e;
+  margin-left:8px;
+  background:#00a884;
   border:none;
-  padding:10px;
+  padding:12px 16px;
+  border-radius:50%;
+  color:white;
+  font-weight:bold;
+}
+
+/* Reply preview */
+#replyBox {
+  background:#111b21;
+  color:#ccc;
+  padding:5px 10px;
+  font-size:12px;
+  display:none;
 }
 </style>
 
@@ -89,23 +132,25 @@ button {
 <body>
 
 <div class="chat">
-  <div class="header">💬 Live Chat</div>
+
+  <div class="header">💬 Aqil Chat Pro</div>
 
   <div id="messages" class="messages"></div>
 
+  <div id="replyBox"></div>
+
   <div class="input-box">
     <input id="msg" placeholder="Type message...">
-    <button onclick="send()">Send</button>
+    <button onclick="send()">➤</button>
   </div>
+
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
 
-// 🔥 Firebase config (tumhara already daala hua)
 const firebaseConfig = {
   apiKey: "AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
   authDomain: "axassi-warsi.firebaseapp.com",
@@ -119,7 +164,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 👤 username system
+// username
 let username = localStorage.getItem("name");
 if (!username) {
   username = prompt("Enter your name:");
@@ -128,7 +173,7 @@ if (!username) {
 
 let replyTo = null;
 
-// 📤 send message
+// send
 function send() {
   let input = document.getElementById("msg");
   let text = input.value.trim();
@@ -143,56 +188,49 @@ function send() {
 
   input.value = "";
   replyTo = null;
+  document.getElementById("replyBox").style.display = "none";
 }
 
-// 📥 receive message
+// receive
 db.ref("chat").on("child_added", snap => {
   let d = snap.val();
 
   let div = document.createElement("div");
   div.className = "msg";
 
-  // apna ya dusra
-  if (d.name === username) {
-    div.classList.add("me");
-  } else {
-    div.classList.add("other");
-  }
+  if (d.name === username) div.classList.add("me");
+  else div.classList.add("other");
 
-  // reply
   if (d.reply) {
     let r = document.createElement("div");
     r.className = "reply";
-    r.innerText = "↩ " + d.reply;
+    r.innerText = d.reply;
     div.appendChild(r);
   }
 
-  // name
   let n = document.createElement("div");
   n.className = "name";
   n.innerText = d.name;
   div.appendChild(n);
 
-  // text
   let t = document.createElement("div");
   t.innerText = d.text;
   div.appendChild(t);
 
-  // time
   let time = document.createElement("div");
   time.className = "time";
   time.innerText = d.time;
   div.appendChild(time);
 
-  // reply click
   div.onclick = () => {
     replyTo = d.text;
-    alert("Replying to: " + d.text);
+    let rb = document.getElementById("replyBox");
+    rb.style.display = "block";
+    rb.innerText = "Replying to: " + d.text;
   };
 
   document.getElementById("messages").appendChild(div);
 
-  // auto scroll
   let box = document.getElementById("messages");
   box.scrollTop = box.scrollHeight;
 });
@@ -200,4 +238,3 @@ db.ref("chat").on("child_added", snap => {
 
 </body>
 </html>
-     updated by axassi warsi
