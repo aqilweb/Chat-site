@@ -4,129 +4,11 @@
 <meta charset="UTF-8">
 <title>Aqil Chat Pro</title>
 
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
+<!-- Premium Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 
-body {
-  font-family: Arial;
-  background:#0b141a;
-  height:100vh;
-  display:flex;
-}
-
-.chat {
-  width:100%;
-  display:flex;
-  flex-direction:column;
-}
-
-/* Header */
-.header {
-  background:#202c33;
-  color:white;
-  padding:14px;
-  font-size:18px;
-  position:sticky;
-  top:0;
-  z-index:10;
-  text-align:center;
-}
-
-/* Messages */
-.messages {
-  flex:1;
-  overflow-y:auto;
-  padding:10px;
-}
-
-/* Message bubble */
-.msg {
-  max-width:75%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:10px;
-  animation:fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {opacity:0; transform:translateY(5px);}
-  to {opacity:1; transform:translateY(0);}
-}
-
-/* My message */
-.me {
-  background:#005c4b;
-  color:white;
-  margin-left:auto;
-}
-
-/* Other message */
-.other {
-  background:#202c33;
-  color:white;
-}
-
-/* Name */
-.name {
-  font-size:11px;
-  color:#00a884;
-}
-
-/* Reply */
-.reply {
-  font-size:11px;
-  color:#8696a0;
-  border-left:3px solid #00a884;
-  padding-left:6px;
-  margin-bottom:3px;
-}
-
-/* Time */
-.time {
-  font-size:10px;
-  text-align:right;
-  opacity:0.6;
-  margin-top:3px;
-}
-
-/* Input area */
-.input-box {
-  display:flex;
-  padding:8px;
-  background:#202c33;
-  position:sticky;
-  bottom:0;
-}
-
-input {
-  flex:1;
-  padding:12px;
-  border:none;
-  outline:none;
-  border-radius:20px;
-  background:#2a3942;
-  color:white;
-}
-
-button {
-  margin-left:8px;
-  background:#00a884;
-  border:none;
-  padding:12px 16px;
-  border-radius:50%;
-  color:white;
-  font-weight:bold;
-}
-
-/* Reply preview */
-#replyBox {
-  background:#111b21;
-  color:#ccc;
-  padding:5px 10px;
-  font-size:12px;
-  display:none;
-}
-</style>
+<!-- CSS Link -->
+<link rel="stylesheet" href="style.css">
 
 </head>
 <body>
@@ -146,11 +28,11 @@ button {
 
 </div>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-
 const firebaseConfig = {
   apiKey: "AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
   authDomain: "axassi-warsi.firebaseapp.com",
@@ -164,7 +46,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// username
+// Username system
 let username = localStorage.getItem("name");
 if (!username) {
   username = prompt("Enter your name:");
@@ -173,7 +55,7 @@ if (!username) {
 
 let replyTo = null;
 
-// send
+// Send message
 function send() {
   let input = document.getElementById("msg");
   let text = input.value.trim();
@@ -191,7 +73,7 @@ function send() {
   document.getElementById("replyBox").style.display = "none";
 }
 
-// receive
+// Receive messages
 db.ref("chat").on("child_added", snap => {
   let d = snap.val();
 
