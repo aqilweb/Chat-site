@@ -3,18 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>Aqil World Chat</title>
-<meta name="description" content="Aqil World Chat - Live chat website where anyone can chat and reply in real time.">
-<!-- Mobile Responsive -->
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Google Verification -->
 <meta name="google-site-verification" content="t-RIh4dFR32hyMJT7iGNPeQG7-s8-PqnkaSGRp5RtN0" />
+
+<!-- SEO -->
+<meta name="description" content="Aqil World Chat - Live chat website where anyone can chat and reply in real time.">
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
 
 <!-- CSS -->
 <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 
@@ -22,6 +25,7 @@
 
   <div class="header">
     💬 Aqil World Chat
+    <div id="onlineUsers" style="font-size:12px; color:#00ffd5;"></div>
   </div>
 
   <div id="messages" class="messages"></div>
@@ -59,7 +63,7 @@ if (!username) {
 
 let replyTo = null;
 
-// Send message
+// SEND MESSAGE
 function send() {
   let input = document.getElementById("msg");
   let text = input.value.trim();
@@ -77,7 +81,7 @@ function send() {
   document.getElementById("replyBox").style.display = "none";
 }
 
-// Receive messages
+// RECEIVE MESSAGE
 db.ref("chat").on("child_added", snap => {
   let d = snap.val();
 
@@ -102,6 +106,17 @@ db.ref("chat").on("child_added", snap => {
 
   let box = document.getElementById("messages");
   box.scrollTop = box.scrollHeight;
+});
+
+// ONLINE USERS SYSTEM
+const userRef = db.ref("online/" + username);
+userRef.set(true);
+userRef.onDisconnect().remove();
+
+db.ref("online").on("value", snap => {
+  let users = snap.val();
+  let list = Object.keys(users || {}).join(", ");
+  document.getElementById("onlineUsers").innerText = "Online: " + list;
 });
 </script>
 
