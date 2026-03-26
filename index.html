@@ -8,36 +8,138 @@
 <meta name="google-site-verification" content="t-RIh4dFR32hyMJT7iGNPeQG7-s8-PqnkaSGRp5RtN0" />
 
 <style>
-body{margin:0;font-family:Arial;background:#0f2027;color:white}
-.chat{display:flex;flex-direction:column;height:100vh}
-.header{padding:10px;text-align:center;background:#111}
-.messages{flex:1;overflow:auto;padding:10px}
-.msg{max-width:70%;padding:10px;margin:5px;border-radius:10px;position:relative}
-.me{background:#00f5a0;color:black;margin-left:auto}
-.other{background:#333}
-.input{display:flex;padding:10px;background:#111}
-input{flex:1;padding:10px;border:none;border-radius:20px}
-button{margin-left:5px;padding:10px;border:none;border-radius:50%}
-img{max-width:100%;border-radius:10px}
-.actions{margin-top:5px}
-.light{background:#f5f5f5;color:black}
-</style>
+body{
+margin:0;
+font-family:Poppins, sans-serif;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:white;
+overflow:hidden;
+}
 
+#intro{
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#0f2027;
+z-index:999;
+}
+
+#intro h1{
+font-size:38px;
+animation:spin 3s ease forwards;
+text-shadow:0 0 25px #00ffd5;
+}
+
+@keyframes spin{
+0%{transform:rotateY(0deg) scale(0.5);opacity:0}
+50%{transform:rotateY(180deg) scale(1.2);opacity:1}
+100%{transform:rotateY(360deg) scale(1);opacity:1}
+}
+
+.chat{
+display:flex;
+flex-direction:column;
+height:100vh;
+opacity:0;
+transition:0.5s;
+}
+
+.header{
+padding:12px;
+text-align:center;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(10px);
+position:relative;
+}
+
+.messages{
+flex:1;
+overflow:auto;
+padding:10px;
+}
+
+.msg{
+max-width:65%;
+padding:10px;
+margin:6px;
+border-radius:12px;
+font-size:14px;
+}
+
+.me{
+background:linear-gradient(135deg,#00f5a0,#00d9f5);
+color:black;
+margin-left:auto;
+}
+
+.other{
+background:rgba(255,255,255,0.1);
+}
+
+.input{
+display:flex;
+padding:10px;
+background:rgba(255,255,255,0.05);
+}
+
+input{
+flex:1;
+padding:10px;
+border:none;
+border-radius:20px;
+background:rgba(255,255,255,0.1);
+color:white;
+}
+
+button{
+margin-left:6px;
+padding:8px 12px;
+border:none;
+border-radius:50%;
+background:#00ffd5;
+cursor:pointer;
+}
+
+img{max-width:100%;border-radius:10px}
+
+.top-btn{
+position:absolute;
+right:10px;
+top:10px;
+}
+
+.light{
+background:#f5f5f5;
+color:black;
+}
+</style>
 </head>
+
 <body>
 
-<div class="chat">
+<div id="intro">
+<h1>✨ Chat With Aqil ✨</h1>
+</div>
+
+<div class="chat" id="chat">
 
 <div class="header">
 💬 Aqil World Chat  
 <div id="online"></div>
 <div id="typing"></div>
+
+<div class="top-btn">
+<button onclick="refreshChat()">🔄</button>
 <button onclick="toggleMode()">🌙</button>
+</div>
 </div>
 
 <div id="messages" class="messages"></div>
 
-<div id="replyBox" style="display:none;padding:5px;background:#222"></div>
+<div id="replyBox" style="display:none;padding:5px;background:#111"></div>
 
 <div class="input">
 <input id="msg" placeholder="Type..." oninput="typingNow()">
@@ -53,10 +155,19 @@ img{max-width:100%;border-radius:10px}
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
+// INTRO FIX
+setTimeout(()=>{
+document.getElementById("intro").style.display="none";
+document.getElementById("chat").style.opacity="1";
+document.body.style.overflow="auto";
+},3000);
+
+// FIREBASE
 const firebaseConfig={
 apiKey:"AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
 databaseURL:"https://axassi-warsi-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
@@ -96,11 +207,17 @@ reply=null;
 replyBox.style.display="none";
 }
 
-// RECEIVE
+// LOAD
+function load(){
+messages.innerHTML="";
+db.ref("chat").off();
+
 db.ref("chat").on("child_added",s=>{
 let d=s.val(),id=s.key;
 
-sound.play();
+// SOUND FIX
+let sfx=document.getElementById("sound");
+if(sfx) sfx.play().catch(()=>{});
 
 let div=document.createElement("div");
 div.className="msg "+(d.name==user?"me":"other");
@@ -111,11 +228,9 @@ ${d.reply?`<small>↩ ${d.reply}</small><br>`:""}
 ${d.text||""}
 ${d.img?`<img src="${d.img}">`:""}
 <br><small>${new Date(d.time).toLocaleTimeString()}</small>
-
-<div class="actions">
+<br>
 <button onclick="like('${id}')">❤️ ${d.likes||0}</button>
 ${d.name==user?`<button onclick="del('${id}')">🗑️</button>`:""}
-</div>
 `;
 
 div.onclick=()=>{
@@ -129,6 +244,12 @@ replyBox.style.display="block";
 messages.appendChild(div);
 messages.scrollTop=messages.scrollHeight;
 });
+}
+
+load();
+
+// REFRESH
+function refreshChat(){load();}
 
 // LIKE
 function like(id){
@@ -159,7 +280,7 @@ let u=Object.keys(s.val()||{}).filter(x=>x!=user);
 typing.innerText=u.length?u+" typing...":"";
 });
 
-// DARK MODE
+// MODE
 function toggleMode(){
 document.body.classList.toggle("light");
 }
