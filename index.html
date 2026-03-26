@@ -3,121 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <title>Aqil World Chat</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Google Verification -->
 <meta name="google-site-verification" content="t-RIh4dFR32hyMJT7iGNPeQG7-s8-PqnkaSGRp5RtN0" />
 
-<!-- SEO -->
-<meta name="description" content="Aqil World Chat - Live chat website where anyone can chat and reply in real time.">
-
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-
-<!-- CSS -->
-<link rel="stylesheet" href="style.css">
+<style>
+body{margin:0;font-family:Arial;background:#0f2027;color:white}
+.chat{display:flex;flex-direction:column;height:100vh}
+.header{padding:10px;text-align:center;background:#111}
+.messages{flex:1;overflow:auto;padding:10px}
+.msg{max-width:70%;padding:10px;margin:5px;border-radius:10px;position:relative}
+.me{background:#00f5a0;color:black;margin-left:auto}
+.other{background:#333}
+.input{display:flex;padding:10px;background:#111}
+input{flex:1;padding:10px;border:none;border-radius:20px}
+button{margin-left:5px;padding:10px;border:none;border-radius:50%}
+img{max-width:100%;border-radius:10px}
+.actions{margin-top:5px}
+.light{background:#f5f5f5;color:black}
+</style>
 
 </head>
 <body>
 
-<div class="chat-app">
+<div class="chat">
 
-  <div class="header">
-    💬 Aqil World Chat
-    <div id="onlineUsers" style="font-size:12px; color:#00ffd5;"></div>
-  </div>
+<div class="header">
+💬 Aqil World Chat  
+<div id="online"></div>
+<div id="typing"></div>
+<button onclick="toggleMode()">🌙</button>
+</div>
 
-  <div id="messages" class="messages"></div>
+<div id="messages" class="messages"></div>
 
-  <div id="replyBox"></div>
+<div id="replyBox" style="display:none;padding:5px;background:#222"></div>
 
-  <div class="input-area">
-    <input id="msg" placeholder="Type message...">
-    <button onclick="send()">➤</button>
-  </div>
+<div class="input">
+<input id="msg" placeholder="Type..." oninput="typingNow()">
+<input type="file" id="img">
+<button onclick="send()">➤</button>
+</div>
 
 </div>
 
-<!-- Firebase -->
+<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
-  authDomain: "axassi-warsi.firebaseapp.com",
-  databaseURL: "https://axassi-warsi-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "axassi-warsi"
+const firebaseConfig={
+apiKey:"AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
+databaseURL:"https://axassi-warsi-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let user=localStorage.getItem("user")||prompt("Enter name");
+localStorage.setItem("user",user);
+
+let reply=null;
+
+// SEND
+function send(){
+let text=msg.value.trim();
+let file=img.files[0];
+if(!text && !file) return;
+
+let data={
+name:user,
+text:text,
+reply:reply,
+time:Date.now(),
+likes:0
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// Username
-let username = localStorage.getItem("name");
-if (!username) {
-  username = prompt("Enter your name:");
-  localStorage.setItem("name", username);
+if(file){
+let r=new FileReader();
+r.onload=e=>{
+data.img=e.target.result;
+db.ref("chat").push(data);
+};
+r.readAsDataURL(file);
+}else{
+db.ref("chat").push(data);
 }
 
-let replyTo = null;
-
-// SEND MESSAGE
-function send() {
-  let input = document.getElementById("msg");
-  let text = input.value.trim();
-  if (!text) return;
-
-  db.ref("chat").push({
-    name: username,
-    text: text,
-    reply: replyTo,
-    time: new Date().toLocaleTimeString()
-  });
-
-  input.value = "";
-  replyTo = null;
-  document.getElementById("replyBox").style.display = "none";
+msg.value="";
+img.value="";
+reply=null;
+replyBox.style.display="none";
 }
 
-// RECEIVE MESSAGE
-db.ref("chat").on("child_added", snap => {
-  let d = snap.val();
+// RECEIVE
+db.ref("chat").on("child_added",s=>{
+let d=s.val(),id=s.key;
 
-  let div = document.createElement("div");
-  div.className = "msg " + (d.name === username ? "me" : "other");
+sound.play();
 
-  div.innerHTML = `
-    ${d.reply ? `<div class="reply">${d.reply}</div>` : ""}
-    <div class="name">${d.name}</div>
-    <div class="text">${d.text}</div>
-    <div class="time">${d.time}</div>
-  `;
+let div=document.createElement("div");
+div.className="msg "+(d.name==user?"me":"other");
 
-  div.onclick = () => {
-    replyTo = d.text;
-    let rb = document.getElementById("replyBox");
-    rb.style.display = "block";
-    rb.innerText = "Replying: " + d.text;
-  };
+div.innerHTML=`
+${d.reply?`<small>↩ ${d.reply}</small><br>`:""}
+<b>${d.name}</b><br>
+${d.text||""}
+${d.img?`<img src="${d.img}">`:""}
+<br><small>${new Date(d.time).toLocaleTimeString()}</small>
 
-  document.getElementById("messages").appendChild(div);
+<div class="actions">
+<button onclick="like('${id}')">❤️ ${d.likes||0}</button>
+${d.name==user?`<button onclick="del('${id}')">🗑️</button>`:""}
+</div>
+`;
 
-  let box = document.getElementById("messages");
-  box.scrollTop = box.scrollHeight;
+div.onclick=()=>{
+if(d.text){
+reply=d.text;
+replyBox.innerText="Reply: "+d.text;
+replyBox.style.display="block";
+}
+};
+
+messages.appendChild(div);
+messages.scrollTop=messages.scrollHeight;
 });
 
-// ONLINE USERS SYSTEM
-const userRef = db.ref("online/" + username);
-userRef.set(true);
-userRef.onDisconnect().remove();
+// LIKE
+function like(id){
+db.ref("chat/"+id+"/likes").transaction(v=>(v||0)+1);
+}
 
-db.ref("online").on("value", snap => {
-  let users = snap.val();
-  let list = Object.keys(users || {}).join(", ");
-  document.getElementById("onlineUsers").innerText = "Online: " + list;
+// DELETE
+function del(id){
+db.ref("chat/"+id).remove();
+}
+
+// ONLINE
+db.ref("online/"+user).set(true);
+db.ref("online/"+user).onDisconnect().remove();
+
+db.ref("online").on("value",s=>{
+online.innerText="🟢 "+Object.keys(s.val()||{}).join(", ");
 });
+
+// TYPING
+function typingNow(){
+db.ref("typing/"+user).set(true);
+setTimeout(()=>db.ref("typing/"+user).remove(),2000);
+}
+
+db.ref("typing").on("value",s=>{
+let u=Object.keys(s.val()||{}).filter(x=>x!=user);
+typing.innerText=u.length?u+" typing...":"";
+});
+
+// DARK MODE
+function toggleMode(){
+document.body.classList.toggle("light");
+}
 </script>
 
 </body>
