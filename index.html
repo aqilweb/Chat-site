@@ -1,371 +1,180 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+<title>Aqil World Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aqil Chat Ultimate</title>
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
-
-/* 🌌 GLOBAL BACKGROUND */
-#bg{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:0;
-}
-
-/* LOGIN */
-#login{
-position:fixed;width:100%;height:100vh;
-display:flex;justify-content:center;align-items:center;
-z-index:2;
-}
-
-/* LOGIN BOX */
-.login-box{
-position:relative;padding:30px;width:260px;
-background:rgba(0,0,0,0.65);
-border-radius:20px;text-align:center;color:#fff;
-box-shadow:0 0 30px #ff00cc,0 0 80px #ff00cc inset;
-backdrop-filter:blur(10px);
-}
-
-.login-box input{
-width:100%;margin:8px 0;padding:10px;
-background:transparent;border:none;border-bottom:1px solid #ff00cc;color:#fff;
-}
-
-.login-box button{
-width:100%;padding:10px;border:none;border-radius:20px;
-background:linear-gradient(45deg,#ff00cc,#ff4dff);
-color:white;
-}
-
-/* INTRO */
-#intro{
-display:none;position:fixed;width:100%;height:100vh;
-background:black;justify-content:center;align-items:center;
-z-index:2;
-}
-
-.stamp{
-font-size:34px;
-border:4px solid #00ffd5;
-padding:25px;
-color:#00ffd5;
-opacity:0;
-transform:scale(6) rotate(-10deg);
-box-shadow:0 0 30px #00ffd5;
-}
-
-/* 💥 HEAVY STAMP */
-@keyframes stamp{
-0%{transform:scale(6) rotate(-10deg);opacity:0}
-40%{transform:scale(0.7) rotate(3deg);opacity:1}
-60%{transform:scale(1.2) rotate(-2deg)}
-100%{transform:scale(1)}
-}
-
-/* shockwave */
-.stamp::after{
-content:"";
-position:absolute;
-top:50%;left:50%;
-width:10px;height:10px;
-border-radius:50%;
-background:#00ffd5;
-transform:translate(-50%,-50%);
-opacity:0;
-animation:shock 0.8s ease-out forwards;
-}
-
-@keyframes shock{
-0%{opacity:1;transform:translate(-50%,-50%) scale(0)}
-100%{opacity:0;transform:translate(-50%,-50%) scale(15)}
-}
-
-/* CHAT */
-#chat{
-display:none;
-height:100vh;
-flex-direction:column;
-background:transparent;
-position:relative;
-z-index:2;
-}
-
-.messages{
-flex:1;overflow:auto;padding:10px;
-display:flex;flex-direction:column;
-backdrop-filter: blur(6px);
-position:relative;
-z-index:3;
-}
-
-/* MESSAGE */
-.msg{
-max-width:75%;
-padding:12px;
-margin:6px 0;
-border-radius:6px;
-word-wrap:break-word;
-font-size:14px;
-}
-
-/* YOUR MSG */
-.me{
-background:linear-gradient(135deg,#00c6ff,#0072ff);
-color:white;
-align-self:flex-end;
-box-shadow:0 0 10px rgba(0,198,255,0.5);
-}
-
-/* OTHER */
-.other{
-background:#1a1a1a;
-color:#ddd;
-align-self:flex-start;
-}
-
-/* INPUT */
-.input{
-display:flex;padding:10px;
-background:rgba(0,0,0,0.6);
-backdrop-filter: blur(6px);
-position:relative;
-z-index:3;
-}
-
-.input input{
-flex:1;padding:10px;border-radius:20px;border:none;
-}
-
-button{
-margin-left:5px;padding:10px;border:none;border-radius:10px;
-cursor:pointer;
-}
-
-/* ⚡ LIGHTNING */
-.lightning{
-position:fixed;
-width:3px;height:140px;
-background:linear-gradient(#00eaff,#ffffff,#00eaff);
-box-shadow:0 0 25px #00eaff;
-animation:flash 0.3s linear forwards;
-}
-
-@keyframes flash{
-0%{opacity:1;transform:scaleY(1)}
-100%{opacity:0;transform:scaleY(0.2)}
-}
-</style>
+<meta name="google-site-verification" content="t-RIh4dFR32hyMJT7iGNPeQG7-s8-PqnkaSGRp5RtN0" />
 </head>
+<link rel="stylesheet" href="style.css">
 
 <body>
 
-<!-- 🌌 GLOBAL CANVAS -->
-<canvas id="bg"></canvas>
-
-<!-- LOGIN -->
-<div id="login">
-<div class="login-box">
-<h2>LOGIN</h2>
-<input id="username" placeholder="Username">
-<input type="password" placeholder="Password">
-<button onclick="start()">SIGN IN</button>
-</div>
-</div>
-
-<!-- INTRO -->
 <div id="intro">
-<div class="stamp" id="stamp">CHAT WITH AQIL</div>
+<h1>✨ Chat With Aqil ✨</h1>
 </div>
 
-<!-- CHAT -->
-<div id="chat">
-<div class="messages" id="messages"></div>
+<div class="chat" id="chat">
+
+<div class="header">
+💬 Aqil World Chat  
+<div id="online"></div>
+<div id="typing"></div>
+
+<div class="top-btn">
+<button onclick="refreshChat()">🔄</button>
+<button onclick="toggleMode()">🌙</button>
+</div>
+</div>
+
+<div id="messages" class="messages"></div>
+
+<div id="replyBox" style="display:none;padding:5px;background:#111"></div>
 
 <div class="input">
-<input id="msgInput" placeholder="Type message">
-<button onclick="sendMsg()">➤</button>
-<button onclick="clearAll()">🧹</button>
-</div>
+<input id="msg" placeholder="Type..." oninput="typingNow()">
+<input type="file" id="img">
+<button onclick="send()">➤</button>
 </div>
 
-<audio id="boom">
-<source src="https://www.soundjay.com/button/beep-10.wav">
-</audio>
+</div>
+
+<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-let username="";
-let chats=[];
-
-/* START */
-function start(){
-let input=document.getElementById("username");
-if(!input.value){alert("Enter username!");return;}
-
-username=input.value;
-
-let saved=localStorage.getItem("chat_"+username);
-chats=saved?JSON.parse(saved):[];
-
-login.style.display="none";
-intro.style.display="flex";
-
-stamp.style.animation="stamp 0.6s forwards";
-document.getElementById("boom").play().catch(()=>{});
-
+// INTRO FIX
 setTimeout(()=>{
-intro.style.display="none";
-chat.style.display="flex";
-load();
-},900);
-}
+document.getElementById("intro").style.display="none";
+document.getElementById("chat").style.opacity="1";
+document.body.style.overflow="auto";
+},3000);
 
-/* SEND */
-function sendMsg(){
-let input=document.getElementById("msgInput");
-if(!input.value.trim()) return;
+// FIREBASE
+const firebaseConfig={
+apiKey:"AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
+databaseURL:"https://axassi-warsi-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
 
-/* ⚡ lightning */
-let bolt=document.createElement("div");
-bolt.className="lightning";
-bolt.style.left=(window.innerWidth-70)+"px";
-bolt.style.top=(window.innerHeight-130)+"px";
-document.body.appendChild(bolt);
-setTimeout(()=>bolt.remove(),300);
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-/* SAVE */
-chats.push({
-user:username,
-text:input.value,
-time:new Date().toLocaleTimeString(),
+let user=localStorage.getItem("user")||prompt("Enter name");
+localStorage.setItem("user",user);
+
+let reply=null;
+
+// SEND
+function send(){
+let text=msg.value.trim();
+let file=img.files[0];
+if(!text && !file) return;
+
+let data={
+name:user,
+text:text,
+reply:reply,
+time:Date.now(),
 likes:0
-});
+};
 
-localStorage.setItem("chat_"+username,JSON.stringify(chats));
-
-input.value="";
-load();
+if(file){
+let r=new FileReader();
+r.onload=e=>{
+data.img=e.target.result;
+db.ref("chat").push(data);
+};
+r.readAsDataURL(file);
+}else{
+db.ref("chat").push(data);
 }
 
-/* LOAD */
+msg.value="";
+img.value="";
+reply=null;
+replyBox.style.display="none";
+}
+
+// LOAD
 function load(){
 messages.innerHTML="";
-chats.forEach((m,i)=>{
+db.ref("chat").off();
+
+db.ref("chat").on("child_added",s=>{
+let d=s.val(),id=s.key;
+
+// SOUND FIX
+let sfx=document.getElementById("sound");
+if(sfx) sfx.play().catch(()=>{});
+
 let div=document.createElement("div");
-div.className="msg "+(m.user===username?"me":"other");
+div.className="msg "+(d.name==user?"me":"other");
 
 div.innerHTML=`
-<b>${m.user}</b>: ${m.text}
-<br><small>${m.time}</small>
+${d.reply?`<small>↩ ${d.reply}</small><br>`:""}
+<b>${d.name}</b><br>
+${d.text||""}
+${d.img?`<img src="${d.img}">`:""}
+<br><small>${new Date(d.time).toLocaleTimeString()}</small>
 <br>
-<button onclick="like(${i})">❤️ ${m.likes}</button>
-<button onclick="del(${i})">🗑️</button>
+<button onclick="like('${id}')">❤️ ${d.likes||0}</button>
+${d.name==user?`<button onclick="del('${id}')">🗑️</button>`:""}
 `;
 
-messages.appendChild(div);
-});
-messages.scrollTop=messages.scrollHeight;
+div.onclick=()=>{
+if(d.text){
+reply=d.text;
+replyBox.innerText="Reply: "+d.text;
+replyBox.style.display="block";
 }
-
-/* LIKE */
-function like(i){
-chats[i].likes++;
-localStorage.setItem("chat_"+username,JSON.stringify(chats));
-load();
-}
-
-/* DELETE */
-function del(i){
-chats.splice(i,1);
-localStorage.setItem("chat_"+username,JSON.stringify(chats));
-load();
-}
-
-/* CLEAR */
-function clearAll(){
-chats=[];
-localStorage.setItem("chat_"+username,JSON.stringify(chats));
-load();
-}
-
-/* 🌌 ULTIMATE BACKGROUND */
-window.onload=function(){
-const canvas=document.getElementById("bg");
-const ctx=canvas.getContext("2d");
-
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
-let particles=[];
-let angle=0;
-
-for(let i=0;i<90;i++){
-particles.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-vx:Math.random()*0.6-0.3,
-vy:Math.random()*0.6-0.3,
-size:Math.random()*2+1
-});
-}
-
-function getColor(){
-let r=128+Math.sin(Date.now()*0.002)*127;
-let b=128+Math.cos(Date.now()*0.002)*127;
-return `rgb(${r},0,${b})`;
-}
-
-function draw(){
-ctx.fillStyle="rgba(15,12,41,0.2)";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-angle+=0.0005;
-
-ctx.save();
-ctx.translate(canvas.width/2,canvas.height/2);
-ctx.rotate(angle);
-ctx.translate(-canvas.width/2,-canvas.height/2);
-
-particles.forEach(p=>{
-p.x+=p.vx;
-p.y+=p.vy;
-
-if(p.x<0||p.x>canvas.width) p.vx*=-1;
-if(p.y<0||p.y>canvas.height) p.vy*=-1;
-
-ctx.beginPath();
-ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-ctx.fillStyle=getColor();
-ctx.shadowBlur=10;
-ctx.shadowColor=getColor();
-ctx.fill();
-
-particles.forEach(p2=>{
-let dx=p.x-p2.x;
-let dy=p.y-p2.y;
-let dist=Math.sqrt(dx*dx+dy*dy);
-if(dist<120){
-ctx.beginPath();
-ctx.moveTo(p.x,p.y);
-ctx.lineTo(p2.x,p2.y);
-ctx.strokeStyle="rgba(255,255,255,0.08)";
-ctx.stroke();
-}
-});
-});
-
-ctx.restore();
-requestAnimationFrame(draw);
-}
-
-draw();
 };
+
+messages.appendChild(div);
+messages.scrollTop=messages.scrollHeight;
+});
+}
+
+load();
+
+// REFRESH
+function refreshChat(){load();}
+
+// LIKE
+function like(id){
+db.ref("chat/"+id+"/likes").transaction(v=>(v||0)+1);
+}
+
+// DELETE
+function del(id){
+db.ref("chat/"+id).remove();
+}
+
+// ONLINE
+db.ref("online/"+user).set(true);
+db.ref("online/"+user).onDisconnect().remove();
+
+db.ref("online").on("value",s=>{
+online.innerText="🟢 "+Object.keys(s.val()||{}).join(", ");
+});
+
+// TYPING
+function typingNow(){
+db.ref("typing/"+user).set(true);
+setTimeout(()=>db.ref("typing/"+user).remove(),2000);
+}
+
+db.ref("typing").on("value",s=>{
+let u=Object.keys(s.val()||{}).filter(x=>x!=user);
+typing.innerText=u.length?u+" typing...":"";
+});
+
+// MODE
+function toggleMode(){
+document.body.classList.toggle("light");
+}
 </script>
 
 </body>
