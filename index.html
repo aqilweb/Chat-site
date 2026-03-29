@@ -2,145 +2,153 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Aqil World Chat</title>
+<title>Aqil Chat Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="google-site-verification" content="t-RIh4dFR32hyMJT7iGNPeQG7-s8-PqnkaSGRp5RtN0" />
+<style>
+body{
+margin:0;
+font-family:sans-serif;
+background:#0b141a;
+color:white;
+}
+
+/* HEADER */
+.header{
+background:#202c33;
+padding:10px;
+font-size:18px;
+}
+
+/* CHAT AREA */
+.messages{
+height:75vh;
+overflow:auto;
+padding:10px;
+display:flex;
+flex-direction:column;
+}
+
+/* MESSAGE */
+.msg{
+padding:10px;
+margin:5px 0;
+border-radius:10px;
+max-width:75%;
+}
+
+.me{
+background:#005c4b;
+align-self:flex-end;
+}
+
+.other{
+background:#202c33;
+align-self:flex-start;
+}
+
+/* INPUT */
+.input{
+display:flex;
+padding:10px;
+background:#202c33;
+}
+
+input{
+flex:1;
+padding:10px;
+border:none;
+border-radius:20px;
+}
+
+button{
+margin-left:5px;
+border:none;
+border-radius:50%;
+padding:10px;
+cursor:pointer;
+}
+
+/* AUDIO */
+audio{
+margin-top:5px;
+width:100%;
+}
+</style>
 </head>
-<link rel="stylesheet" href="style.css">
 
 <body>
 
-<div id="intro">
-<h1>✨ Chat With Aqil ✨</h1>
-</div>
-
-<div class="chat" id="chat">
-
 <div class="header">
-💬 Aqil World Chat  
+💬 Aqil Chat Pro
 <div id="online"></div>
-<div id="typing"></div>
-
-<div class="top-btn">
-<button onclick="refreshChat()">🔄</button>
-<button onclick="toggleMode()">🌙</button>
-</div>
 </div>
 
 <div id="messages" class="messages"></div>
 
-<div id="replyBox" style="display:none;padding:5px;background:#111"></div>
-
 <div class="input">
-<input id="msg" placeholder="Type..." oninput="typingNow()">
-<input type="file" id="img">
+<input id="msg" placeholder="Type message..." oninput="typingNow()">
 <button onclick="send()">➤</button>
+<button onclick="startRec()">🎤</button>
+<button onclick="stopRec()">⏹️</button>
+<button onclick="clearAll()">🧹</button>
 </div>
-
-</div>
-
-<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-// INTRO FIX
-setTimeout(()=>{
-document.getElementById("intro").style.display="none";
-document.getElementById("chat").style.opacity="1";
-document.body.style.overflow="auto";
-},3000);
-
 // FIREBASE
 const firebaseConfig={
 apiKey:"AIzaSyCzFQTyj0HG88Rv2EKPk1albET2jb_A6zc",
 databaseURL:"https://axassi-warsi-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-let user=localStorage.getItem("user")||prompt("Enter name");
-localStorage.setItem("user",user);
+// ✅ USERNAME FIX (force new input if null)
+let user=localStorage.getItem("user");
 
-let reply=null;
+if(!user || user=="null"){
+user=prompt("Enter your name");
+localStorage.setItem("user",user);
+}
 
 // SEND
 function send(){
 let text=msg.value.trim();
-let file=img.files[0];
-if(!text && !file) return;
+if(!text) return;
 
-let data={
+db.ref("chat").push({
 name:user,
 text:text,
-reply:reply,
 time:Date.now(),
 likes:0
-};
-
-if(file){
-let r=new FileReader();
-r.onload=e=>{
-data.img=e.target.result;
-db.ref("chat").push(data);
-};
-r.readAsDataURL(file);
-}else{
-db.ref("chat").push(data);
-}
+});
 
 msg.value="";
-img.value="";
-reply=null;
-replyBox.style.display="none";
 }
 
 // LOAD
-function load(){
-messages.innerHTML="";
-db.ref("chat").off();
-
 db.ref("chat").on("child_added",s=>{
 let d=s.val(),id=s.key;
-
-// SOUND FIX
-let sfx=document.getElementById("sound");
-if(sfx) sfx.play().catch(()=>{});
 
 let div=document.createElement("div");
 div.className="msg "+(d.name==user?"me":"other");
 
 div.innerHTML=`
-${d.reply?`<small>↩ ${d.reply}</small><br>`:""}
 <b>${d.name}</b><br>
 ${d.text||""}
-${d.img?`<img src="${d.img}">`:""}
+${d.audio?`<audio controls src="${d.audio}"></audio>`:""}
 <br><small>${new Date(d.time).toLocaleTimeString()}</small>
 <br>
 <button onclick="like('${id}')">❤️ ${d.likes||0}</button>
-${d.name==user?`<button onclick="del('${id}')">🗑️</button>`:""}
+${d.name==user?`<button onclick="delMsg('${id}')">🗑️</button>`:""}
 `;
-
-div.onclick=()=>{
-if(d.text){
-reply=d.text;
-replyBox.innerText="Reply: "+d.text;
-replyBox.style.display="block";
-}
-};
 
 messages.appendChild(div);
 messages.scrollTop=messages.scrollHeight;
 });
-}
-
-load();
-
-// REFRESH
-function refreshChat(){load();}
 
 // LIKE
 function like(id){
@@ -148,8 +156,18 @@ db.ref("chat/"+id+"/likes").transaction(v=>(v||0)+1);
 }
 
 // DELETE
-function del(id){
+function delMsg(id){
+if(confirm("Delete?")){
 db.ref("chat/"+id).remove();
+}
+}
+
+// CLEAR
+function clearAll(){
+if(confirm("Clear all chat?")){
+db.ref("chat").remove();
+messages.innerHTML="";
+}
 }
 
 // ONLINE
@@ -160,20 +178,47 @@ db.ref("online").on("value",s=>{
 online.innerText="🟢 "+Object.keys(s.val()||{}).join(", ");
 });
 
+// 🎤 VOICE FIX (IMPORTANT)
+let mediaRecorder;
+let chunks=[];
+
+async function startRec(){
+let stream=await navigator.mediaDevices.getUserMedia({audio:true});
+mediaRecorder=new MediaRecorder(stream);
+
+mediaRecorder.ondataavailable=e=>{
+chunks.push(e.data);
+};
+
+mediaRecorder.onstop=()=>{
+let blob=new Blob(chunks,{type:"audio/webm"});
+let reader=new FileReader();
+
+reader.onload=e=>{
+db.ref("chat").push({
+name:user,
+audio:e.target.result,
+time:Date.now()
+});
+};
+
+reader.readAsDataURL(blob);
+chunks=[];
+};
+
+mediaRecorder.start();
+}
+
+function stopRec(){
+if(mediaRecorder){
+mediaRecorder.stop();
+}
+}
+
 // TYPING
 function typingNow(){
 db.ref("typing/"+user).set(true);
 setTimeout(()=>db.ref("typing/"+user).remove(),2000);
-}
-
-db.ref("typing").on("value",s=>{
-let u=Object.keys(s.val()||{}).filter(x=>x!=user);
-typing.innerText=u.length?u+" typing...":"";
-});
-
-// MODE
-function toggleMode(){
-document.body.classList.toggle("light");
 }
 </script>
 
